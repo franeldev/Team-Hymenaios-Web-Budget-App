@@ -14,14 +14,26 @@ const getCalcItemsApi = (event) => {
 		 	 "Content-Type": "application/json"
 		 }
 		})
-		.then(response => response.json())
+		.then(response => {
+            resStatus = response.status;
+            console.log(resStatus);
+            if(resStatus == 401) {
+                $("#allocated").modal("toggle")
+                dull = null;
+                return reAuthenticate(dull);
+            }
+            return response.json()
+        })
 		.then(data => {
-            console.log(data)
-            allocatedItems = [];
-            not_allocatedItems = [];
-            allocatedItems.push(...data.allocated);
-            not_allocatedItems.push(...data.not_allocated);
-            calculatedResult(data.low_budget)
+            if(data) {
+                console.log(data)
+                allocatedItems = [];
+                not_allocatedItems = [];
+                allocatedItems.push(...data.allocated);
+                not_allocatedItems.push(...data.not_allocated);
+                calculatedResult(data.low_budget)
+            }
+        
         })
 		.catch(error => {
             console.error(error)
@@ -53,21 +65,21 @@ const not_allocatedList = document.querySelector('[data-not_allocated-list]')
 
            
             allocatedList.innerHTML += `
-                <li class="budget-item">
+                <li class="budget-item" style="list-style:none;">
                     <div id="cal_border-design${id}" class="card shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                             <span class="list-edit list-item">${title} :</span>
-                            <span class="list-edit list-amount">${formatted_item_amount}</span>
+                            <span class="list-edit list-amount amount_allocated">${formatted_item_amount}</span>
                             </div>
                             <div name="comments" rows="4"
                             class="list-edit list-description">${description}</div>
                             <ul class="list-label-list">
-                            <li class="list-label-item normal-label" style="color:black;">${i}</li>
+                            <li class="list-label-item normal-label" style="color:black;">${i +1}</li>
                             <li class="list-label-item normal-label">${category}</li>
-                            <li id="cal_border-design_2${id}" class="list-label-item important-priority-label">${priority}</li>
+                            <li id="cal_border-design_2${id}" class="prior list-label-item important-priority-label">${priority}</li>
                             </ul>
                         </div>
                         </div>
@@ -120,21 +132,21 @@ const not_allocatedList = document.querySelector('[data-not_allocated-list]')
 
            
             not_allocatedList.innerHTML += `
-                <li class="budget-item">
+                <li class="budget-item" style="list-style:none;">
                     <div id="cal_not_border-design${id}" class="card shadow h-100 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                             <span class="list-edit list-item">${title} :</span>
-                            <span class="list-edit list-amount">${formatted_item_amount}</span>
+                            <span class="list-edit list-amount not_amount_allocated">${formatted_item_amount}</span>
                             </div>
                             <div name="comments" rows="4"
                             class="list-edit list-description">${description}</div>
                             <ul class="list-label-list">
-                            <li class="list-label-item normal-label" style=" color:black;">${i}</li>
+                            <li class="list-label-item normal-label" style=" color:black;">${i+1}</li>
                             <li class="list-label-item normal-label">${category}</li>
-                            <li id="cal_not_border-design_2${id}" class="list-label-item important-priority-label">${priority}</li>
+                            <li id="cal_not_border-design_2${id}" class="na_prior list-label-item important-priority-label">${priority}</li>
                             </ul>
                         </div>
                         </div>
@@ -158,13 +170,11 @@ const not_allocatedList = document.querySelector('[data-not_allocated-list]')
         })
 
     }else {
-        console.log('jsdjsdj')
         not_allocatedList.innerHTML = `<li style="text-align:center;">All items are allocated! </li>`;
     }
-    console.log(low_budget)
     if(low_budget.length != 0) {
-        document.querySelector('[data-low-budget_1]').innerHTML = `Your have a low budget amount of ${tip} ${low_budget} which obstruct allocation (item allocation terminated)`;
-        document.querySelector('[data-low-budget_2]').innerHTML = `Your have a low budget amount of ${tip} ${low_budget} which obstruct allocation (item allocation terminated)`;
+        document.querySelector('[data-low-budget_1]').innerHTML = `Allocation skipped for item (${low_budget[0][0]}) with amount (${tip} ${low_budget[0][1]}) due to a low budget amount (${tip} ${low_budget[0][2]})`;
+        document.querySelector('[data-low-budget_2]').innerHTML = `Allocation skipped for item (${low_budget[0][0]}) with amount (${tip} ${low_budget[0][1]}) due to a low budget amount (${tip} ${low_budget[0][2]})`;
     }
 
 }
